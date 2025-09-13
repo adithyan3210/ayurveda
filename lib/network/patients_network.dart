@@ -5,7 +5,7 @@ import 'dart:convert';
 import '../core/shared_preference.dart';
 import '../models/branch_model.dart';
 import '../models/patient_model.dart';
-import '../models/treatment_model.dart'; // <-- import your treatment model
+import '../models/treatment_model.dart';
 
 class PatientService {
   Future<PatientResponse> fetchPatientList() async {
@@ -75,11 +75,11 @@ class PatientService {
     required double discountAmount,
     required double advanceAmount,
     required double balanceAmount,
-    required String dateNdTime, // format: 01/02/2024-10:24 AM
-    required String male, // comma-separated treatment ids
-    required String female, // comma-separated treatment ids
+    required String dateNdTime,
+    required List<String> male,
+    required List<String> female,
     required String branch,
-    required String treatments, // comma-separated treatment ids
+    required List<String> treatments,
   }) async {
     final url = Uri.parse(registerUrl);
 
@@ -98,18 +98,15 @@ class PatientService {
         "balance_amount": balanceAmount.toString(),
         "date_nd_time": dateNdTime,
         "id": "",
-        "male": male,
-        "female": female,
-        "branch": branch,
-        "treatments": treatments,
+        "male": male.join(","),
+        "female": female.join(","),
+        "branch": branch.toString(),
+        "treatments": treatments.join(","),
       };
-
+      log("REGISTER PATIENT PAYLOAD => ${jsonEncode(body)}");
       final response = await http.post(
         url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        headers: {'Authorization': 'Bearer $token'},
         body: jsonEncode(body),
       );
 
@@ -117,11 +114,7 @@ class PatientService {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && data["status"] == true) {
-        return true; // success
-      } else {
-        throw Exception(data["message"] ?? "Failed to register patient");
-      }
+      return true;
     } catch (e) {
       log("REGISTER PATIENT EXCEPTION => $e");
       throw Exception("Failed to register patient: $e");
