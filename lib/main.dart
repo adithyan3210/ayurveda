@@ -1,3 +1,4 @@
+import 'package:ayurveda/widgets/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'Ayurveda',
+          theme: ThemeData(scaffoldBackgroundColor: MainTheme.commonWhite),
           routerConfig: Modular.routerConfig,
         );
       },

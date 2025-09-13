@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/patient_provider.dart';
+import '../routes.dart';
 import '../widgets/theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () => Navigator.pop(context),
                     child: Icon(
                       Icons.arrow_back,
-                      size: 20.sp,
+                      size: 25.sp,
                       color: MainTheme.commonBlack,
                     ),
                   ),
@@ -383,7 +385,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Couple Combo Package (Rejuven...)',
+                                        patient.patientdetailsSet
+                                            .map((detail) {
+                                              final name =
+                                                  detail.treatmentName
+                                                      ?.trim() ??
+                                                  '';
+                                              return name.isEmpty
+                                                  ? 'Treatment not specified'
+                                                  : name;
+                                            })
+                                            .join(', '),
                                         style: TextStyle(
                                           fontSize: 14.sp,
                                           color: MainTheme.primaryGreen,
@@ -483,22 +495,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        width: double.infinity,
-        margin: EdgeInsets.only(bottom: 10.h, left: 20.w, right: 20.w),
-        height: 50.h,
-        decoration: BoxDecoration(
-          color: MainTheme.primaryGreen,
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        child: Center(
-          child: Text(
-            'Register Now',
-            style: TextStyle(
-              color: MainTheme.commonWhite,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              fontFamily: "poppinsSemiBold",
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: 10.h, left: 20.w, right: 20.w),
+        child: SizedBox(
+          height: 50.h,
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MainTheme.primaryGreen,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            onPressed: () {
+              Modular.to.pushNamed(Routes.registerScreen);
+            },
+            child: Text(
+              'Register Now',
+              style: TextStyle(
+                color: MainTheme.commonWhite,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: "poppinsSemiBold",
+              ),
             ),
           ),
         ),
