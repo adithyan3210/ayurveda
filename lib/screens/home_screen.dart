@@ -63,19 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      Icons.arrow_back,
-                      size: 25.sp,
-                      color: MainTheme.commonBlack,
-                    ),
-                  ),
                   Image.asset(
                     "assets/icons/notification.webp",
                     width: 24.w,
@@ -112,18 +104,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               isDense: true,
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.fromLTRB(
-                                10.w,
-                                10.h,
-                                50.w,
-                                0,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 12.h,
                               ),
-                              prefix: Padding(
-                                padding: EdgeInsets.only(right: 5.w),
+                              prefixIcon: Padding(
+                                padding: EdgeInsets.all(12.w),
                                 child: Image.asset(
                                   "assets/icons/search.webp",
-                                  width: 18.w,
-                                  height: 18.w,
+                                  width: 14.w,
+                                  height: 14.w,
+                                  color: MainTheme.commonBlack,
                                 ),
                               ),
                               suffixIcon: Consumer<PatientProvider>(

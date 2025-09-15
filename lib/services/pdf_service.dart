@@ -154,7 +154,7 @@ class PDFService {
             },
             data: treatments.map((t) {
               final price = double.tryParse(t["price"].toString()) ?? 0;
-              final male = int.tryParse(t["male"].toString()) ?? 0;
+              final male = int.tryParse(t["male"].toString()) ?? 100;
               final female = int.tryParse(t["female"].toString()) ?? 0;
               final total = price * (male + female);
               return [
