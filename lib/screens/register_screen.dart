@@ -1219,9 +1219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           bgColor: MainTheme.primaryGreen,
         );
 
-        // Generate PDF after successful registration
         await _generateAndOpenPDF();
-
         Navigator.pop(context);
       } else {
         showSnackBar(
@@ -1236,107 +1234,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _generateAndOpenPDF() async {
+    final filePath = await PDFService.generatePatientRegistrationPDF(
+      bookedOn: DateTime.now().toString(),
+      patientName: _nameController.text.trim(),
+      phoneNumber: _whatsappController.text.trim(),
+      address: _addressController.text.trim(),
+      location: _selectedLocation ?? '',
+      branch: _selectedBranch ?? '',
+      treatments: _treatments,
+      totalAmount: _totalAmountController.text.trim(),
+      discountAmount: _discountController.text.trim(),
+      advanceAmount: _advanceController.text.trim(),
+      balanceAmount: _balanceController.text.trim(),
+      paymentOption: _selectedPaymentOption ?? 'Cash',
+      treatmentDate: _treatmentDateController.text.trim(),
+      treatmentTime:
+          '${_selectedTreatmentHour ?? '00'}:${_selectedTreatmentMinutes ?? '00'}',
+    );
+
+    await PDFService.openPDF(filePath);
+  }
+
+  void _openNotificationPDF() async {
     try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: MainTheme.primaryGreen),
-                SizedBox(height: 16),
-                Text(
-                  'Generating PDF...',
-                  style: TextStyle(fontSize: 16, fontFamily: 'poppins'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      // Generate PDF
       final filePath = await PDFService.generatePatientRegistrationPDF(
-        patientName: _nameController.text.trim(),
-        phoneNumber: _whatsappController.text.trim(),
-        address: _addressController.text.trim(),
-        location: _selectedLocation ?? 'Not selected',
-        branch: _selectedBranch ?? 'Not selected',
-        treatments: _treatments,
-        totalAmount: _totalAmountController.text.trim(),
-        discountAmount: _discountController.text.trim(),
-        advanceAmount: _advanceController.text.trim(),
-        balanceAmount: _balanceController.text.trim(),
-        paymentOption: _selectedPaymentOption ?? 'Cash',
-        treatmentDate: _treatmentDateController.text.trim(),
-        treatmentTime:
-            '${_selectedTreatmentHour ?? '00'}:${_selectedTreatmentMinutes ?? '00'}',
+        bookedOn: DateTime.now().toString(),
+        patientName: "John Doe (Notification PDF)", // Hardcoded
+        phoneNumber: "9999999999",
+        address: "123 Demo Street",
+        location: "Notification-City",
+        branch: "HQ Branch",
+        treatments: [
+          {"id": "1", "name": "Massage", "male": 1, "female": 0},
+        ],
+        totalAmount: "1000",
+        discountAmount: "100",
+        advanceAmount: "500",
+        balanceAmount: "400",
+        paymentOption: "Cash",
+        treatmentDate: "01/01/2024",
+        treatmentTime: "10:00",
       );
 
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show success dialog with options
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            'PDF Generated Successfully!',
-            style: TextStyle(fontFamily: 'poppinsMedium', fontSize: 18),
-          ),
-          content: Text(
-            'Patient registration details have been saved as PDF.',
-            style: TextStyle(fontFamily: 'poppins', fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Close',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontFamily: 'poppins',
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                try {
-                  await PDFService.openPDF(filePath);
-                } catch (e) {
-                  showSnackBar(
-                    context,
-                    'Failed to open PDF: $e',
-                    bgColor: Colors.red,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: MainTheme.primaryGreen,
-              ),
-              child: Text(
-                'Open PDF',
-                style: TextStyle(color: Colors.white, fontFamily: 'poppins'),
-              ),
-            ),
-          ],
-        ),
-      );
+      await PDFService.openPDF(filePath);
     } catch (e) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-
-      showSnackBar(context, 'Failed to generate PDF: $e', bgColor: Colors.red);
+      showSnackBar(
+        context,
+        "Error opening notification PDF: $e",
+        bgColor: Colors.red,
+      );
     }
   }
 

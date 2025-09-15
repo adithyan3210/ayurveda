@@ -1,11 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:open_filex/open_filex.dart';
 
 class PDFService {
   static Future<String> generatePatientRegistrationPDF({
@@ -22,269 +21,226 @@ class PDFService {
     required String paymentOption,
     required String treatmentDate,
     required String treatmentTime,
+    required String bookedOn,
   }) async {
     final pdf = pw.Document();
 
-    // Add page to PDF
+    final logo = pw.MemoryImage(
+      (await rootBundle.load('assets/images/logo.webp')).buffer.asUint8List(),
+    );
+    final signatureImage = pw.MemoryImage(
+      (await rootBundle.load('assets/icons/sign.webp')).buffer.asUint8List(),
+    );
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(20),
-        build: (pw.Context context) {
-          return pw.Column(
+        margin: const pw.EdgeInsets.all(24),
+        build: (context) => [
+          pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              // Header
-              _buildHeader(),
-              pw.SizedBox(height: 20),
-              
-              // Patient Information Section
-              _buildSectionTitle('Patient Information'),
-              pw.SizedBox(height: 10),
-              _buildInfoRow('Name:', patientName),
-              _buildInfoRow('Phone:', phoneNumber),
-              _buildInfoRow('Address:', address),
-              _buildInfoRow('Location:', location),
-              _buildInfoRow('Branch:', branch),
-              pw.SizedBox(height: 20),
-              
-              // Treatment Details Section
-              _buildSectionTitle('Treatment Details'),
-              pw.SizedBox(height: 10),
-              _buildTreatmentTable(treatments),
-              pw.SizedBox(height: 20),
-              
-              // Payment Information Section
-              _buildSectionTitle('Payment Information'),
-              pw.SizedBox(height: 10),
-              _buildInfoRow('Total Amount:', '₹$totalAmount'),
-              _buildInfoRow('Discount Amount:', '₹$discountAmount'),
-              _buildInfoRow('Advance Amount:', '₹$advanceAmount'),
-              _buildInfoRow('Balance Amount:', '₹$balanceAmount'),
-              _buildInfoRow('Payment Method:', paymentOption),
-              pw.SizedBox(height: 20),
-              
-              // Schedule Information Section
-              _buildSectionTitle('Schedule Information'),
-              pw.SizedBox(height: 10),
-              _buildInfoRow('Treatment Date:', treatmentDate),
-              _buildInfoRow('Treatment Time:', treatmentTime),
-              pw.SizedBox(height: 30),
-              
-              // Footer
-              _buildFooter(),
+              pw.Container(height: 80, width: 80, child: pw.Image(logo)),
+              pw.SizedBox(width: 12),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(
+                      "KUMARAKOM",
+                      style: pw.TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.black,
+                      ),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      "Cheepunkal P.O. Kumarakom, Kerala - 686563",
+                      style: pw.TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromInt(0xff9A9A9A),
+                      ),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      "e-mail: unknown@gmail.com",
+                      style: pw.TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromInt(0xff9A9A9A),
+                      ),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      "Mob: +91 9876543210 | +91 9876543210",
+                      style: pw.TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromInt(0xff9A9A9A),
+                      ),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      "GST No: 32AABCU9603R1ZW",
+                      style: pw.TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          );
-        },
-      ),
-    );
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(color: PdfColor.fromInt(0x4D000000)),
 
-    // Save PDF to device
-    return await _savePDF(pdf);
-  }
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      "Patient Details",
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.green,
+                        fontSize: 14,
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text("Name: $patientName"),
+                    pw.Text("Address: $address"),
+                    pw.Text("Location: $location"),
+                    pw.Text("WhatsApp number: $phoneNumber"),
+                  ],
+                ),
 
-  static pw.Widget _buildHeader() {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.all(20),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.green100,
-        borderRadius: pw.BorderRadius.circular(10),
-      ),
-      child: pw.Column(
-        children: [
-          pw.Text(
-            'AYURVEDA CLINIC',
-            style: pw.TextStyle(
-              fontSize: 24,
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text("Booked On: $bookedOn"),
+                    pw.Text("Treatment Date: $treatmentDate"),
+                    pw.Text("Treatment Time: $treatmentTime"),
+                    pw.Text("Payment: $paymentOption"),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(color: PdfColor.fromInt(0x4D000000)),
+          pw.Table.fromTextArray(
+            headers: ["Treatment", "Price", "Male", "Female", "Total"],
+            headerStyle: pw.TextStyle(
               fontWeight: pw.FontWeight.bold,
-              color: PdfColors.green800,
+              color: PdfColors.white,
             ),
+            headerDecoration: pw.BoxDecoration(color: PdfColors.green),
+            cellHeight: 28,
+            cellAlignments: {
+              0: pw.Alignment.centerLeft,
+              1: pw.Alignment.center,
+              2: pw.Alignment.center,
+              3: pw.Alignment.center,
+              4: pw.Alignment.centerRight,
+            },
+            data: treatments.map((t) {
+              final price = double.tryParse(t["price"].toString()) ?? 0;
+              final male = int.tryParse(t["male"].toString()) ?? 0;
+              final female = int.tryParse(t["female"].toString()) ?? 0;
+              final total = price * (male + female);
+              return [
+                t["name"],
+                "₹$price",
+                male.toString(),
+                female.toString(),
+                "₹$total",
+              ];
+            }).toList(),
           ),
-          pw.SizedBox(height: 5),
-          pw.Text(
-            'Patient Registration Details',
-            style: pw.TextStyle(
-              fontSize: 16,
-              color: PdfColors.green700,
-            ),
-          ),
-          pw.SizedBox(height: 10),
-          pw.Text(
-            'Generated on: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-            style: pw.TextStyle(
-              fontSize: 12,
-              color: PdfColors.grey600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          pw.SizedBox(height: 20),
 
-  static pw.Widget _buildSectionTitle(String title) {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.green50,
-        borderRadius: pw.BorderRadius.circular(5),
-      ),
-      child: pw.Text(
-        title,
-        style: pw.TextStyle(
-          fontSize: 14,
-          fontWeight: pw.FontWeight.bold,
-          color: PdfColors.green800,
-        ),
-      ),
-    );
-  }
-
-  static pw.Widget _buildInfoRow(String label, String value) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 4),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.SizedBox(
-            width: 120,
-            child: pw.Text(
-              label,
-              style: pw.TextStyle(
-                fontSize: 12,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.grey700,
-              ),
-            ),
-          ),
-          pw.Expanded(
-            child: pw.Text(
-              value,
-              style: pw.TextStyle(
-                fontSize: 12,
-                color: PdfColors.black,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static pw.Widget _buildTreatmentTable(List<Map<String, dynamic>> treatments) {
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey300),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(1),
-        1: const pw.FlexColumnWidth(3),
-        2: const pw.FlexColumnWidth(1),
-        3: const pw.FlexColumnWidth(1),
-      },
-      children: [
-        // Header row
-        pw.TableRow(
-          decoration: const pw.BoxDecoration(color: PdfColors.green100),
-          children: [
-            _buildTableCell('No.', isHeader: true),
-            _buildTableCell('Treatment Name', isHeader: true),
-            _buildTableCell('Male', isHeader: true),
-            _buildTableCell('Female', isHeader: true),
-          ],
-        ),
-        // Data rows
-        ...treatments.asMap().entries.map((entry) {
-          final index = entry.key;
-          final treatment = entry.value;
-          return pw.TableRow(
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.end,
             children: [
-              _buildTableCell('${index + 1}'),
-              _buildTableCell(treatment['name'] ?? ''),
-              _buildTableCell(treatment['male']?.toString() ?? '0'),
-              _buildTableCell(treatment['female']?.toString() ?? '0'),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    "Total Amount: ₹$totalAmount",
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  pw.Text("Discount: ₹$discountAmount"),
+                  pw.Text("Advance: ₹$advanceAmount"),
+                  pw.Divider(),
+                  pw.Text(
+                    "Balance: ₹$balanceAmount",
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 14,
+                      color: PdfColors.green,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          );
-        }).toList(),
-      ],
-    );
-  }
-
-  static pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(8),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(
-          fontSize: isHeader ? 12 : 11,
-          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
-          color: isHeader ? PdfColors.green800 : PdfColors.black,
-        ),
-        textAlign: pw.TextAlign.center,
-      ),
-    );
-  }
-
-  static pw.Widget _buildFooter() {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.all(15),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.grey100,
-        borderRadius: pw.BorderRadius.circular(5),
-      ),
-      child: pw.Column(
-        children: [
-          pw.Text(
-            'Thank you for choosing our services!',
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.green800,
-            ),
           ),
-          pw.SizedBox(height: 5),
-          pw.Text(
-            'For any queries, please contact us at +91-XXXXXXXXXX',
-            style: pw.TextStyle(
-              fontSize: 10,
-              color: PdfColors.grey600,
-            ),
+          pw.SizedBox(height: 30),
+
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                "Thank you for choosing us",
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.green,
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Text(
+                "Your well-being is our commitment, and we're honored\nyou’ve entrusted us with your health journey",
+                textAlign: pw.TextAlign.center,
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Optional Signature Image
+              pw.Image(signatureImage, height: 40),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                "*Booking amount is non-refundable, and it's important to arrive on the allotted time for your treatment*",
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey),
+                textAlign: pw.TextAlign.center,
+              ),
+            ],
           ),
         ],
       ),
     );
-  }
 
-  static Future<String> _savePDF(pw.Document pdf) async {
-    try {
-      // Get the directory for saving the file
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'patient_registration_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final filePath = '${directory.path}/$fileName';
-      
-      // Save the PDF
-      final file = File(filePath);
-      await file.writeAsBytes(await pdf.save());
-      
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to save PDF: $e');
-    }
+    // SAVE PDF
+    final output = await getApplicationDocumentsDirectory();
+    final file = File(
+      "${output.path}/Patient_${patientName.replaceAll(" ", "_")}_${DateTime.now().millisecondsSinceEpoch}.pdf",
+    );
+    await file.writeAsBytes(await pdf.save());
+
+    return file.path;
   }
 
   static Future<void> openPDF(String filePath) async {
-    try {
-      await OpenFile.open(filePath);
-    } catch (e) {
-      throw Exception('Failed to open PDF: $e');
-    }
-  }
-
-  static Future<void> sharePDF(String filePath) async {
-    try {
-      await OpenFile.open(filePath);
-    } catch (e) {
-      throw Exception('Failed to share PDF: $e');
-    }
+    await OpenFilex.open(filePath);
   }
 }
